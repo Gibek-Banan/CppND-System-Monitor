@@ -30,7 +30,11 @@ float Process::CpuUtilization() {
 }
 
 // TODO: Return the command that generated this process
-string Process::Command() { return LinuxParser::Command(pid_); }
+string Process::Command() {
+    command_ = LinuxParser::Command(pid_);
+    unsigned int maxSize = 50;
+    if (command_.length() > maxSize ) command_.replace(command_.begin() + maxSize, command_.end(), "...");
+    return command_; }
 
 // TODO: Return this process's memory utilization
 string Process::Ram() { return LinuxParser::Ram(pid_); }
@@ -39,7 +43,9 @@ string Process::Ram() { return LinuxParser::Ram(pid_); }
 string Process::User() { return LinuxParser::User(pid_); }
 
 // TODO: Return the age of this process (in seconds)
-long int Process::UpTime() { return LinuxParser::UpTime(pid_); }
+long int Process::UpTime() { 
+    return LinuxParser::UpTime() - LinuxParser::UpTime(pid_);
+    }
 
 // TODO: Overload the "less than" comparison operator for Process objects
 // REMOVE: [[maybe_unused]] once you define the function
