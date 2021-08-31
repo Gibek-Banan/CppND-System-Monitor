@@ -23,8 +23,7 @@ vector<Process>& System::Processes() {
     if (!processes_.empty()) processes_.clear();
     //inspired by https://knowledge.udacity.com/questions/270856
     for (int pid : LinuxParser::Pids()){
-    Process process(pid);
-    processes_.emplace_back(process);
+    processes_.emplace_back(pid);
     }
     //inspired by https://knowledge.udacity.com/questions/270856
     std::sort(processes_.begin(),processes_.end());

@@ -37,11 +37,12 @@ string LinuxParser::OperatingSystem() {
 string LinuxParser::Kernel() {
   string os, kernel;
   string line;
+  string version;
   std::ifstream stream(kProcDirectory + kVersionFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    linestream >> os >> kernel;
+    linestream >> os >> version >> kernel;
   }
   return kernel;
 }
@@ -71,20 +72,20 @@ float LinuxParser::MemoryUtilization() {
   string line;
   string key;
   float value;
-  float MemTotal = 0;
-  float MemFree = 0;
+  float memTotal = 0;
+  float memFree = 0;
   std::ifstream filestream(kProcDirectory + kMeminfoFilename);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
       std::replace(line.begin(), line.end(), ':', ' ');
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        if (key == "MemTotal") MemTotal = value;
-        if (key == "MemFree") MemFree = value;;
+        if (key == "MemTotal") memTotal = value;
+        if (key == "MemFree") memFree = value;;
       }
     }
   }
-  return(MemTotal - MemFree)/ MemTotal;
+  return(memTotal - memFree)/ memTotal;
 }
 
 // TODO: Read and return the system uptime
@@ -114,13 +115,13 @@ long LinuxParser::ActiveJiffies(int pid) {
   string line;
   string value;
   vector<string> values;
-  int numberOfValues = 52;
+  int numberOfValuesINeed = 17;
   
   std::ifstream stream(kProcDirectory + std::to_string(pid) + kStatFilename);
   if(stream.is_open()){
   	while(std::getline(stream, line)){
     	std::istringstream linestream(line);
-      for (int i = 0; i < numberOfValues; i++)
+      for (int i = 0; i < numberOfValuesINeed; i++)
       {
         linestream >> value;
         values.emplace_back(value);
@@ -176,10 +177,9 @@ long LinuxParser::IdleJiffies()
   return 0;
 }
 
-// TODO: Read and return CPU utilization
 //I have changed return type from vector<string> to float
 float LinuxParser::CpuUtilization() {
-  return float(ActiveJiffies())/float(Jiffies());
+  return static_cast<float>(ActiveJiffies())/static_cast<float>(Jiffies());
 }
 
 // TODO: Read and return the total number of processes
@@ -226,6 +226,7 @@ string LinuxParser::Command(int pid) {
      return line;
     }
   }
+  return "Error in opening the file";
 }
 
 // TODO: Read and return the memory used by a process
@@ -240,11 +241,14 @@ string LinuxParser::Ram(int pid) {
       std::replace(line.begin(), line.end(), ':', ' ');
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        value=value*0.001;
-        if (key == "VmSize") return std::to_string(value);
+        value=static_cast<float>(value)/1024;
+        //I have used VmRSS instead of VmSize, becouse it gives the exact physical memory
+        //used as a part of Physical RAM
+        if (key == "VmRSS") return std::to_string(value);
       }
     }
   }
+  return "Error in opening the file";
 }
 
 // TODO: Read and return the user ID associated with a process
@@ -263,6 +267,7 @@ string LinuxParser::Uid(int pid) {
       }
     }
   }
+  return "Error in opening the file";
 }
 
 // TODO: Read and return the user associated with a process
@@ -283,7 +288,7 @@ string LinuxParser::User(int pid) {
       }
     }
   }
-  return "Error";
+  return "Error in opening the file";
 }
 
 // TODO: Read and return the uptime of a process
